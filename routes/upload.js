@@ -174,11 +174,14 @@ router.post('/users_excel', uploadExcel.single('file'), async function (req, res
     for (let row = 2; row <= worksheet.rowCount; row++) {
         let errorsInRow = [];
         const contentRow = worksheet.getRow(row);
-        let username = contentRow.getCell(1).value;
+        let rawUsername = contentRow.getCell(1).value;
+        let username = rawUsername && typeof rawUsername === 'object'
+            ? (rawUsername.text || rawUsername.result || '')
+            : rawUsername;
         let rawEmail = contentRow.getCell(2).value;
-        // ExcelJS đọc cell hyperlink dạng { text, hyperlink } thay vì string thuần
+        // ExcelJS đọc formula cell dạng { formula, result } hoặc hyperlink dạng { text, hyperlink }
         let email = rawEmail && typeof rawEmail === 'object'
-            ? (rawEmail.text || rawEmail.hyperlink || '')
+            ? (rawEmail.text || rawEmail.hyperlink || rawEmail.result || '')
             : rawEmail;
 
         if (!username || String(username).trim() === '') {
